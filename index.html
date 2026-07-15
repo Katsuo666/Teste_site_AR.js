@@ -9,22 +9,6 @@
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/donmccurdy/aframe-extras@v6.1.1/dist/aframe-extras.min.js"></script>
 
-    <script>
-      AFRAME.registerComponent('auto-center', {
-        init: function () {
-          this.el.addEventListener('model-loaded', (event) => {
-            const model = event.detail.model;
-            const box = new THREE.Box3().setFromObject(model);
-            const center = new THREE.Vector3();
-            box.getCenter(center);
-            
-            // Move a malha tridimensional interna para anular o desvio do pivot
-            model.position.sub(center);
-          });
-        }
-      });
-    </script>
-
     <style>
       body {
         margin: 0px;
@@ -66,9 +50,12 @@
       A carregar ambiente de Realidade Aumentada...
     </div>
 
+    <!-- CORREÇÃO 3: Adicionadas as configurações de cor e luz exatamente como no MindAR -->
     <a-scene 
       id="ar-scene"
       embedded 
+      color-space="sRGB"
+      renderer="colorManagement: true, physicallyCorrectLights: true"
       arjs="sourceType: webcam; 
             debugUIEnabled: false; 
             detectionMode: mono_and_matrix; 
@@ -78,7 +65,8 @@
             displayWidth: 1280; 
             displayHeight: 720;">
       
-      <a-entity camera></a-entity>
+      <!-- CORREÇÃO 4: Câmara bloqueada da mesma forma que no MindAR -->
+      <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
     </a-scene>
 
     <script>
@@ -102,19 +90,14 @@
           instructionsEl.textContent = "Aponta a câmara para o teu Marcador Personalizado";
         }
 
-        const modelEntity = document.createElement('a-entity');
-        modelEntity.setAttribute('gltf-model', `./assets/${modelParam}.glb`);
+        // Utilizamos <a-gltf-model> em vez de <a-entity> para replicar o MindAR
+        const modelEntity = document.createElement('a-gltf-model');
+        modelEntity.setAttribute('src', `./assets/${modelParam}.glb`);
         
-        // 🛠️ 1. Injetamos o script de autocentragem na entidade do modelo
-        modelEntity.setAttribute('auto-center', '');
-        
-        // 🛠️ 2. Aplicamos a escala compensada (Ajusta este valor para 100, 150 ou 200 até ficar perfeito!)
-        modelEntity.setAttribute('scale', '150 150 150'); 
-        
+        // CORREÇÃO 1 e 2: Script de autocentragem removido e escala aplicada para 15
+        modelEntity.setAttribute('scale', '15 15 15'); 
         modelEntity.setAttribute('position', '0 0 0');
-        
-        // Dica: Se o modelo aparecer deitado ou de costas, altera a rotação aqui (ex: '-90 0 0')
-        modelEntity.setAttribute('rotation', '0 0 0'); 
+        modelEntity.setAttribute('rotation', '0 0 0');
         
         modelEntity.setAttribute('animation-mixer', '');
 
