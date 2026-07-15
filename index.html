@@ -1,14 +1,12 @@
 <!DOCTYPE html>
 <html lang="pt-PT">
   <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
     <meta charset="UTF-8" />
     <title>Teste AR.js - Bolsos - Marcadores Dinâmicos</title>
     
     <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
-    
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
-    
     <script src="https://cdn.jsdelivr.net/gh/donmccurdy/aframe-extras@v6.1.1/dist/aframe-extras.min.js"></script>
 
     <style>
@@ -17,6 +15,21 @@
         overflow: hidden;
         font-family: sans-serif;
       }
+
+      /* COMBINAÇÃO 2: CSS absoluto para controlar o elemento de vídeo gerado pelo AR.js */
+      #arjs-video {
+        width: 100vw !important;
+        height: 100vh !important;
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        margin: 0px !important;
+        padding: 0px !important;
+        /* 'cover' preenche o ecrã inteiro. Se ainda achares muito aproximado, 
+           podes mudar 'cover' para 'contain' (mostra a câmara original sem corte) */
+        object-fit: cover !important; 
+      }
+
       #ar-instructions {
         position: fixed;
         bottom: 20px;
@@ -43,7 +56,14 @@
     <a-scene 
       id="ar-scene"
       embedded 
-      arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3_PARITY65;">
+      arjs="sourceType: webcam; 
+            debugUIEnabled: false; 
+            detectionMode: mono_and_matrix; 
+            matrixCodeType: 3x3_PARITY65;
+            sourceWidth: 1280; 
+            sourceHeight: 720; 
+            displayWidth: 1280; 
+            displayHeight: 720;">
       
       <a-entity camera></a-entity>
     </a-scene>
@@ -68,18 +88,20 @@
           instructionsEl.textContent = `Aponta a câmara para o Marcador de Código de Barras #${markerParam}`;
           console.log(`Configurado Marcador de Código de Barras ID: ${markerParam}`);
         } else {
-          // Caso contrário, usa o marcador padrão "Hiro" para testes rápidos sem código de barras
-          markerEl.setAttribute('preset', 'hiro');
-          instructionsEl.textContent = "Aponta a câmara para o Marcador HIRO padrão";
-          console.log("Nenhum parâmetro de marcador numérico detetado. Usando o preset HIRO.");
+          // MELHORIA: Se não for código de barras, usa o TEU marcador personalizado (.patt) automaticamente!
+          markerEl.setAttribute('type', 'pattern');
+          markerEl.setAttribute('url', './assets/pattern-marker.patt');
+          instructionsEl.textContent = "Aponta a câmara para o teu Marcador Personalizado";
+          console.log("Nenhum parâmetro de marcador numérico detetado. Usando o teu pattern-marker.patt.");
         }
 
         // 3. Criar a entidade do modelo 3D (<a-entity>)
         const modelEntity = document.createElement('a-entity');
         modelEntity.setAttribute('gltf-model', `./assets/${modelParam}.glb`);
         
-        // Configurações de Escala, Posição e Rotação do modelo por cima do marcador físico
-        modelEntity.setAttribute('scale', '0.5 0.5 0.5'); 
+        // Ajuste de Escala do Modelo 3D (Se o modelo parecer gigante no ecrã, 
+        // altera '1 1 1' para valores menores como '0.3 0.3 0.3')
+        modelEntity.setAttribute('scale', '1 1 1'); 
         modelEntity.setAttribute('position', '0 0 0');
         modelEntity.setAttribute('rotation', '0 0 0');
         
