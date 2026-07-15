@@ -9,6 +9,22 @@
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/donmccurdy/aframe-extras@v6.1.1/dist/aframe-extras.min.js"></script>
 
+    <script>
+      AFRAME.registerComponent('auto-center', {
+        init: function () {
+          this.el.addEventListener('model-loaded', (event) => {
+            const model = event.detail.model;
+            const box = new THREE.Box3().setFromObject(model);
+            const center = new THREE.Vector3();
+            box.getCenter(center);
+            
+            // Move a malha tridimensional interna para anular o desvio do pivot
+            model.position.sub(center);
+          });
+        }
+      });
+    </script>
+
     <style>
       body {
         margin: 0px;
@@ -16,7 +32,6 @@
         font-family: sans-serif;
       }
 
-      /* COMBINAÇÃO 2: CSS absoluto para controlar o elemento de vídeo gerado pelo AR.js */
       #arjs-video {
         width: 100vw !important;
         height: 100vh !important;
@@ -25,8 +40,6 @@
         left: 0 !important;
         margin: 0px !important;
         padding: 0px !important;
-        /* 'cover' preenche o ecrã inteiro. Se ainda achares muito aproximado, 
-           podes mudar 'cover' para 'contain' (mostra a câmara original sem corte) */
         object-fit: cover !important; 
       }
 
@@ -70,49 +83,43 @@
 
     <script>
       window.addEventListener('DOMContentLoaded', () => {
-        // 1. Capturar os parâmetros passados pelo código QR na URL
         const urlParams = new URLSearchParams(window.location.search);
-        const modelParam = urlParams.get('model') || '02_Bolsos'; // Padrão: 02_Bolsos
-        const markerParam = urlParams.get('marker'); // Ex: "2"
+        const modelParam = urlParams.get('model') || '02_Bolsos'; 
+        const markerParam = urlParams.get('marker'); 
 
         const sceneEl = document.getElementById('ar-scene');
         const instructionsEl = document.getElementById('ar-instructions');
 
-        // 2. Criar dinamicamente o elemento do Marcador (<a-marker>)
         const markerEl = document.createElement('a-marker');
 
         if (markerParam !== null && !isNaN(markerParam)) {
-          // Se houver um número no parâmetro 'marker', configura como código de barras
           markerEl.setAttribute('type', 'barcode');
           markerEl.setAttribute('value', markerParam);
           instructionsEl.textContent = `Aponta a câmara para o Marcador de Código de Barras #${markerParam}`;
-          console.log(`Configurado Marcador de Código de Barras ID: ${markerParam}`);
         } else {
-          // MELHORIA: Se não for código de barras, usa o TEU marcador personalizado (.patt) automaticamente!
           markerEl.setAttribute('type', 'pattern');
           markerEl.setAttribute('url', './assets/pattern-marker.patt');
           instructionsEl.textContent = "Aponta a câmara para o teu Marcador Personalizado";
-          console.log("Nenhum parâmetro de marcador numérico detetado. Usando o teu pattern-marker.patt.");
         }
 
-        // 3. Criar a entidade do modelo 3D (<a-entity>)
         const modelEntity = document.createElement('a-entity');
         modelEntity.setAttribute('gltf-model', `./assets/${modelParam}.glb`);
         
-        // Ajuste de Escala do Modelo 3D (Se o modelo parecer gigante no ecrã, 
-        // altera '1 1 1' para valores menores como '0.3 0.3 0.3')
-        modelEntity.setAttribute('scale', '200 200 200'); 
-        modelEntity.setAttribute('position', '0 0 0');
-        modelEntity.setAttribute('rotation', '0 0 0');
+        // 🛠️ 1. Injetamos o script de autocentragem na entidade do modelo
+        modelEntity.setAttribute('auto-center', '');
         
-        // Ativa as animações nativas do esqueleto do modelo
+        // 🛠️ 2. Aplicamos a escala compensada (Ajusta este valor para 100, 150 ou 200 até ficar perfeito!)
+        modelEntity.setAttribute('scale', '150 150 150'); 
+        
+        modelEntity.setAttribute('position', '0 0 0');
+        
+        // Dica: Se o modelo aparecer deitado ou de costas, altera a rotação aqui (ex: '-90 0 0')
+        modelEntity.setAttribute('rotation', '0 0 0'); 
+        
         modelEntity.setAttribute('animation-mixer', '');
 
-        // 4. Montar a estrutura da árvore do DOM
         markerEl.appendChild(modelEntity);
         sceneEl.appendChild(markerEl);
-
-        console.log(`Sucesso: Modelo '${modelParam}.glb' injetado no marcador correspondente.`);
       });
     </script>
   </body>
