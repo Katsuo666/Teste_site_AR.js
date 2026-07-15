@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta charset="UTF-8" />
+    <title>Teste AR.js - Bolsos - Marcadores Dinâmicos</title>
+    
+    <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
+    
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+    
+    <script src="https://cdn.jsdelivr.net/gh/donmccurdy/aframe-extras@v6.1.1/dist/aframe-extras.min.js"></script>
+
+    <style>
+      body {
+        margin: 0px;
+        overflow: hidden;
+        font-family: sans-serif;
+      }
+      #ar-instructions {
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(0, 0, 0, 0.75);
+        color: white;
+        padding: 12px 24px;
+        border-radius: 30px;
+        font-size: 14px;
+        z-index: 999;
+        text-align: center;
+        pointer-events: none;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+      }
+    </style>
+  </head>
+  <body>
+
+    <div id="ar-instructions">
+      A carregar ambiente de Realidade Aumentada...
+    </div>
+
+    <a-scene 
+      id="ar-scene"
+      embedded 
+      arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3_PARITY65;">
+      
+      <a-entity camera></a-entity>
+    </a-scene>
+
+    <script>
+      window.addEventListener('DOMContentLoaded', () => {
+        // 1. Capturar os parâmetros passados pelo código QR na URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const modelParam = urlParams.get('model') || '02_Bolsos'; // Padrão: 02_Bolsos
+        const markerParam = urlParams.get('marker'); // Ex: "2"
+
+        const sceneEl = document.getElementById('ar-scene');
+        const instructionsEl = document.getElementById('ar-instructions');
+
+        // 2. Criar dinamicamente o elemento do Marcador (<a-marker>)
+        const markerEl = document.createElement('a-marker');
+
+        if (markerParam !== null && !isNaN(markerParam)) {
+          // Se houver um número no parâmetro 'marker', configura como código de barras
+          markerEl.setAttribute('type', 'barcode');
+          markerEl.setAttribute('value', markerParam);
+          instructionsEl.textContent = `Aponta a câmara para o Marcador de Código de Barras #${markerParam}`;
+          console.log(`Configurado Marcador de Código de Barras ID: ${markerParam}`);
+        } else {
+          // Caso contrário, usa o marcador padrão "Hiro" para testes rápidos sem código de barras
+          markerEl.setAttribute('preset', 'hiro');
+          instructionsEl.textContent = "Aponta a câmara para o Marcador HIRO padrão";
+          console.log("Nenhum parâmetro de marcador numérico detetado. Usando o preset HIRO.");
+        }
+
+        // 3. Criar a entidade do modelo 3D (<a-entity>)
+        const modelEntity = document.createElement('a-entity');
+        modelEntity.setAttribute('gltf-model', `./assets/${modelParam}.glb`);
+        
+        // Configurações de Escala, Posição e Rotação do modelo por cima do marcador físico
+        modelEntity.setAttribute('scale', '1 1 1'); 
+        modelEntity.setAttribute('position', '0 0 0');
+        modelEntity.setAttribute('rotation', '0 0 0');
+        
+        // Ativa as animações nativas do esqueleto do modelo
+        modelEntity.setAttribute('animation-mixer', '');
+
+        // 4. Montar a estrutura da árvore do DOM
+        markerEl.appendChild(modelEntity);
+        sceneEl.appendChild(markerEl);
+
+        console.log(`Sucesso: Modelo '${modelParam}.glb' injetado no marcador correspondente.`);
+      });
+    </script>
+  </body>
+</html>
